@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit Card Recommendation</title>
+<style>
+  :root{
+    --ink:#0E1A2B;
+    --ink-soft:#3A4A5E;
+    --paper:#F6F4EF;
+    --card:#FFFFFF;
+    --line:#E2DDD3;
+    --teal:#0B7A6E;
+    --teal-deep:#075249;
+    --coral:#E8643C;
+    --gold:#C9A227;
+    --shadow:0 1px 2px rgba(14,26,43,.05),0 8px 28px rgba(14,26,43,.08);
+    --r:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:
+      radial-gradient(120% 140% at 85% -10%, rgba(11,122,110,.16), transparent 55%),
+      radial-gradient(120% 140% at 0% 110%, rgba(232,100,60,.12), transparent 50%),
+      var(--ink);
+    color:#fff;
+    padding:64px 0 120px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .wrap{position:relative;z-index:2}
+  .eyebrow{
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:#9FE7DC;font-weight:600;margin-bottom:18px;
+  }
+  .hero h1{
+    font-size:clamp(34px,6vw,62px);
+    line-height:1.02;
+    font-weight:800;
+    letter-spacing:-.02em;
+    max-width:14ch;
+  }
+  .hero h1 em{font-style:normal;color:#FFC9B6}
+  .hero p.lede{
+    margin-top:22px;max-width:54ch;font-size:clamp(15px,2vw,18px);
+    color:#C8D2DD;
+  }
+  .profile{
+    margin-top:38px;display:flex;flex-wrap:wrap;gap:10px;
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.16);
+    padding:9px 15px;border-radius:999px;font-size:13.5px;color:#EAF0F4;
+    backdrop-filter:blur(4px);
+  }
+  .chip b{color:#fff}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:#9FE7DC}
+
+  /* floating card graphic */
+  .hero-cards{position:absolute;top:50px;right:-40px;z-index:1;opacity:.9}
+  .mini-card{
+    position:absolute;width:230px;height:144px;border-radius:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .mc1{background:linear-gradient(135deg,#0B7A6E,#075249);top:0;right:120px;transform:rotate(-12deg)}
+  .mc2{background:linear-gradient(135deg,#E8643C,#C04A26);top:60px;right:0;transform:rotate(8deg)}
+  .mc-chip{position:absolute;top:22px;left:22px;width:34px;height:26px;border-radius:6px;background:rgba(255,255,255,.35)}
+  .mc-line{position:absolute;left:22px;height:7px;border-radius:4px;background:rgba(255,255,255,.3)}
+  @media(max-width:880px){.hero-cards{display:none}}
+
+  /* ---------- VERDICT ---------- */
+  .verdict{margin-top:-80px;position:relative;z-index:5}
+  .verdict-card{
+    background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);
+    border:1px solid var(--line);overflow:hidden;
+  }
+  .verdict-top{
+    display:flex;gap:6px;align-items:stretch;
+    background:linear-gradient(90deg,var(--teal),var(--teal-deep));
+    color:#fff;padding:8px 22px;font-size:12px;letter-spacing:.16em;
+    text-transform:uppercase;font-weight:600;
+  }
+  .verdict-body{padding:30px 34px}
+  .verdict-body h2{font-size:clamp(24px,4vw,34px);letter-spacing:-.01em}
+  .verdict-body .tag{
+    display:inline-block;margin-bottom:14px;font-size:12px;font-weight:700;
+    color:var(--teal-deep);background:#DDF0EC;padding:5px 12px;border-radius:999px;
+    letter-spacing:.04em;
+  }
+  .verdict-body p{color:var(--ink-soft);margin-top:14px;max-width:62ch}
+  .verdict-cta{
+    margin-top:22px;display:inline-flex;align-items:center;gap:9px;
+    background:var(--coral);color:#fff;text-decoration:none;font-weight:600;
+    padding:13px 22px;border-radius:11px;font-size:14.5px;
+    transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .verdict-cta:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(232,100,60,.35)}
+
+  /* ---------- SECTION ---------- */
+  section{padding:58px 0}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+  .sec-num{font-size:13px;font-weight:700;color:var(--coral);letter-spacing:.1em}
+  .sec-head h3{font-size:clamp(22px,3.5vw,30px);letter-spacing:-.01em}
+  .sec-sub{color:var(--ink-soft);max-width:60ch;margin-bottom:30px}
+
+  /* ---------- FILTER / CALCULATOR ---------- */
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:26px;box-shadow:var(--shadow);
+  }
+  .filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .filter-row .lbl{font-size:13px;font-weight:600;color:var(--ink-soft);margin-right:4px}
+  .pill{
+    border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+    padding:9px 16px;border-radius:999px;font-size:13.5px;font-weight:500;
+    cursor:pointer;transition:all .15s ease;font-family:inherit;
+  }
+  .pill:hover{border-color:var(--teal);color:var(--teal)}
+  .pill.active{background:var(--teal);border-color:var(--teal);color:#fff}
+
+  .calc{margin-top:26px;border-top:1px dashed var(--line);padding-top:24px}
+  .calc h4{font-size:15px;margin-bottom:4px}
+  .calc .hint{font-size:13px;color:var(--ink-soft);margin-bottom:18px}
+  .slider-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;height:6px;border-radius:99px;
+    background:linear-gradient(90deg,var(--teal),#9FE7DC);flex:1;min-width:200px;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+    background:#fff;border:3px solid var(--teal);cursor:pointer;box-shadow:var(--shadow);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:22px;height:22px;border-radius:50%;background:#fff;
+    border:3px solid var(--teal);cursor:pointer;
+  }
+  .spend-val{font-size:22px;font-weight:800;color:var(--ink);min-width:130px}
+  .spend-val small{font-size:13px;font-weight:500;color:var(--ink-soft)}
+  .est-grid{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .est{background:var(--paper);border-radius:12px;padding:14px 16px;border:1px solid var(--line)}
+  .est .name{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-bottom:6px;height:32px;display:flex;align-items:center}
+  .est .amt{font-size:21px;font-weight:800;color:var(--teal-deep)}
+  .est .amt small{font-size:12px;color:var(--ink-soft);font-weight:500}
+  .est.win{border-color:var(--teal);background:#EAF7F4}
+  .est.win .badge{font-size:10px;font-weight:700;color:#fff;background:var(--teal);padding:2px 8px;border-radius:99px;letter-spacing:.05em}
+
+  /* ---------- CARD GRID ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
+  .ccard{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;
+    transition:transform .2s ease,box-shadow .2s ease,opacity .25s ease;
+  }
+  .ccard:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(14,26,43,.13)}
+  .ccard.dim{opacity:.32;filter:grayscale(.4)}
+  .ccard-top{padding:20px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .ccard h4{font-size:17.5px;letter-spacing:-.01em;line-height:1.25}
+  .rank{
+    flex-shrink:0;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    font-size:13px;font-weight:800;background:var(--paper);color:var(--ink-soft);border:1px solid var(--line);
+  }
+  .ccard.top-pick{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal),var(--shadow)}
+  .ccard.top-pick .rank{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .best-ribbon{
+    background:var(--gold);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;padding:5px 22px;
+  }
+  .ccard-body{padding:16px 22px 22px;display:flex;flex-direction:column;flex:1}
+  .reward-line{font-size:14px;color:var(--ink-soft);margin-bottom:16px;min-height:40px}
+  .reward-line b{color:var(--ink)}
+  .specs{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
+  .spec{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .spec:last-child{border-bottom:none}
+  .spec .k{color:var(--ink-soft)}
+  .spec .v{font-weight:600;text-align:right}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+  .tg{font-size:11px;font-weight:600;padding:4px 9px;border-radius:7px;background:var(--paper);color:var(--ink-soft);border:1px solid var(--line)}
+  .tg.good{background:#EAF7F4;color:var(--teal-deep);border-color:#BfE5DD}
+  .tg.warn{background:#FCEEE8;color:#B4502E;border-color:#F3D2C5}
+  .expand{
+    margin-top:auto;border:none;background:none;cursor:pointer;font-family:inherit;
+    color:var(--teal);font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px;
+    padding:6px 0;
+  }
+  .expand .arw{transition:transform .2s ease}
+  .expand.open .arw{transform:rotate(180deg)}
+  .detail{max-height:0;overflow:hidden;transition:max-height .35s ease}
+  .detail-inner{padding-top:14px;border-top:1px dashed var(--line);margin-top:6px}
+  .detail h5{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--coral);margin:14px 0 7px}
+  .detail h5:first-child{margin-top:0}
+  .detail ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+  .detail li{font-size:13px;color:var(--ink-soft);padding-left:18px;position:relative}
+  .detail li::before{content:"";position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--teal)}
+  .detail li.warn::before{background:var(--coral)}
+  .applylink{
+    display:inline-flex;align-items:center;gap:7px;margin-top:16px;
+    font-size:13.5px;font-weight:600;color:#fff;background:var(--ink);
+    text-decoration:none;padding:10px 16px;border-radius:9px;transition:background .15s ease;
+  }
+  .applylink:hover{background:var(--teal-deep)}
+
+  /* ---------- STRATEGY ---------- */
+  .strategy{background:var(--ink);color:#fff;border-radius:22px;padding:42px 38px;position:relative;overflow:hidden}
+  .strategy::after{content:"";position:absolute;inset:0;background:radial-gradient(90% 120% at 100% 0%,rgba(11,122,110,.25),transparent 55%);pointer-events:none}
+  .strategy h3{font-size:clamp(22px,3.5vw,30px);position:relative}
+  .strategy>p{color:#C8D2DD;margin-top:10px;max-width:60ch;position:relative}
+  .combo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;position:relative}
+  @media(max-width:680px){.combo{grid-template-columns:1fr}}
+  .combo-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:22px}
+  .combo-card .role{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#9FE7DC;font-weight:600}
+  .combo-card .nm{font-size:18px;font-weight:700;margin:8px 0 8px}
+  .combo-card .why{font-size:13.5px;color:#C8D2DD}
+  .warnbox{margin-top:24px;background:rgba(232,100,60,.14);border:1px solid rgba(232,100,60,.35);border-radius:12px;padding:16px 18px;font-size:13.5px;color:#FFD9CB;position:relative}
+
+  /* tips */
+  .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .tip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+  .tip .ic{width:38px;height:38px;border-radius:10px;background:#EAF7F4;color:var(--teal-deep);display:grid;place-items:center;font-size:18px;font-weight:800;margin-bottom:12px}
+  .tip h4{font-size:15px;margin-bottom:6px}
+  .tip p{font-size:13.5px;color:var(--ink-soft)}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:34px 0 60px;margin-top:30px}
+  footer p{font-size:12.5px;color:var(--ink-soft);max-width:70ch}
+  footer a{color:var(--teal-deep)}
+  .disclaimer{background:#FCF8EE;border:1px solid #EAD9A8;border-radius:12px;padding:16px 18px;font-size:13px;color:#7A5E12;margin-bottom:22px}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}}
+  :focus-visible{outline:3px solid var(--coral);outline-offset:2px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-cards" aria-hidden="true">
+    <div class="mini-card mc1">
+      <span class="mc-chip"></span>
+      <span class="mc-line" style="width:120px;bottom:46px"></span>
+      <span class="mc-line" style="width:80px;bottom:28px"></span>
+    </div>
+    <div class="mini-card mc2">
+      <span class="mc-chip"></span>
+      <span class="mc-line" style="width:120px;bottom:46px"></span>
+      <span class="mc-line" style="width:80px;bottom:28px"></span>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="eyebrow">Personal Card Match · June 2026</div>
+    <h1>Finding the right card for <em>Shopee &amp; big-ticket buys</em></h1>
+    <p class="lede">A side-by-side look at seven Malaysian credit cards, matched to a RM3,100/month earner who shops mainly on Shopee and wants 0% instalments for things like a MacBook.</p>
+    <div class="profile">
+      <span class="chip"><span class="dot"></span>Income <b>RM3,100/mo</b></span>
+      <span class="chip"><span class="dot"></span>Top spend <b>Online / Shopee</b></span>
+      <span class="chip"><span class="dot"></span>Needs <b>EPP for big items</b></span>
+      <span class="chip"><span class="dot"></span>Wants <b>Cashback or rewards</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap verdict">
+  <div class="verdict-card">
+    <div class="verdict-top"><span>★ The verdict</span></div>
+    <div class="verdict-body">
+      <span class="tag">BEST SINGLE CARD</span>
+      <h2>Maybank Shopee Visa Platinum</h2>
+      <p>It is the one card that covers both jobs at once: heavy Shopee rewards <b>and</b> 0% instalment plans for a MacBook. It has the lowest income bar of the Maybank picks, is free for life, and is built for exactly this spending profile. If her shopping ever spreads beyond Shopee, pair it with the AFFIN DUO Visa for 3% flat cashback anywhere online.</p>
+      <a class="verdict-cta" href="https://ringgitplus.com/en/credit-card/Maybank-Shopee-Visa-Platinum.html" target="_blank" rel="noopener">View card &amp; apply →</a>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARE -->
+<section id="compare">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">01</span><h3>Compare the cards</h3></div>
+    <p class="sec-sub">Filter by what matters, then estimate yearly returns based on her real spending. Tap any card to expand full requirements, benefits and the fine print.</p>
+
+    <div class="panel">
+      <div class="filter-row" role="group" aria-label="Filter cards">
+        <span class="lbl">Show:</span>
+        <button class="pill active" data-filter="all">All cards</button>
+        <button class="pill" data-filter="qualifies">Qualifies at RM3,100</button>
+        <button class="pill" data-filter="shopee">Best for Shopee</button>
+        <button class="pill" data-filter="online">Any online merchant</button>
+        <button class="pill" data-filter="cashback">Real cashback</button>
+        <button class="pill" data-filter="freeforlife">Free for life</button>
+      </div>
+
+      <div class="calc">
+        <h4>Estimate yearly value</h4>
+        <p class="hint">Drag to set her monthly online spend. Estimates assume reward caps and typical category rates; coins valued at face (RM0.01 each).</p>
+        <div class="slider-wrap">
+          <input type="range" id="spend" min="200" max="3000" step="50" value="800" aria-label="Monthly online spend">
+          <div class="spend-val"><span id="spendOut">RM800</span><small> / month online</small></div>
+        </div>
+        <div class="est-grid" id="estGrid"></div>
+      </div>
+    </div>
+
+    <div style="height:26px"></div>
+    <div class="grid" id="cardGrid"></div>
+  </div>
+</section>
+
+<!-- STRATEGY -->
+<section id="strategy">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">02</span><h3>Her game plan</h3></div>
+    <p class="sec-sub">Start simple with one card. Add a second only if she wants to squeeze more from non-Shopee shopping and can pay in full every month.</p>
+    <div class="strategy">
+      <h3>One card now, an optional second later</h3>
+      <p>The cleanest setup keeps everything on the Shopee Visa Platinum. A two-card combo earns more across mixed platforms, but only pays off with disciplined repayment.</p>
+      <div class="combo">
+        <div class="combo-card">
+          <div class="role">Card 1 · Core</div>
+          <div class="nm">Maybank Shopee Visa Platinum</div>
+          <div class="why">5x coins on campaign days plus the widest 0% EzyPay partner network for a MacBook. Handles Shopee and big-ticket EPP together.</div>
+        </div>
+        <div class="combo-card">
+          <div class="role">Card 2 · Optional add-on</div>
+          <div class="nm">AFFIN DUO Visa</div>
+          <div class="why">3% flat real cashback on any online merchant (Lazada, websites, overseas). Lowest income bar of all, free for life.</div>
+        </div>
+      </div>
+      <div class="warnbox">⚠ Keep it to 2–3 cards max. Card interest of 15–18% p.a. wipes out every ringgit of cashback. Always pay the full statement balance each month.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIPS -->
+<section id="tips">
+  <div class="wrap">
+    <div class="sec-head"><span class="sec-num">03</span><h3>Smart-use tips</h3></div>
+    <p class="sec-sub">Small habits that meaningfully raise her real return.</p>
+    <div class="tips">
+      <div class="tip"><div class="ic">28</div><h4>Time big Shopee buys</h4><p>Spend on the 28th (Pay Day) or campaign days (9.9, 11.11, 12.12) to unlock the 5x coin tier instead of the 2x normal rate.</p></div>
+      <div class="tip"><div class="ic">0%</div><h4>Check EPP partners first</h4><p>For the MacBook, confirm the store is a Maybank 0% EzyPay partner before buying, and check the tenure (6/12/24 months). Otherwise it falls back to 9% p.a.</p></div>
+      <div class="tip"><div class="ic">✓</div><h4>Pay in full, monthly</h4><p>Settle the whole statement balance every cycle to dodge 15% p.a. interest that would cancel out all rewards.</p></div>
+      <div class="tip"><div class="ic">⏱</div><h4>Mind promo deadlines</h4><p>0% EPP promotions are time-limited and change often. Verify the current offer at the point of purchase.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="disclaimer">This report is general information, not financial advice. Rates, caps, fees and 0% EPP partner lists change frequently. Confirm all current terms directly with the issuing bank before applying.</div>
+    <p>Sources: <a href="https://ringgitplus.com/en/credit-card/Maybank/" target="_blank" rel="noopener">RinggitPlus</a>, <a href="https://rates.my/best-credit-cards-malaysia/" target="_blank" rel="noopener">rates.my</a>, <a href="https://smarterpik.com/blog/best-credit-card-malaysia/" target="_blank" rel="noopener">SmarterPik</a>, Malay Mail. Compiled 13 June 2026. The AFFIN DUO and CIMB links point to listing pages; the Standard Chartered figures come from an older source — verify those on the bank's own site before applying.</p>
+  </div>
+</footer>
+
+<script>
+const cards = [
+  {
+    id:"shopee", rank:1, top:true, name:"Maybank Shopee Visa Platinum",
+    reward:"<b>5x Shopee Coins</b> on campaign days, 2x normal days",
+    income:"RM2,000/mo", fee:"Free for life", epp:"Widest 0% network",
+    qualifies:true,
+    tags:[["Best for Shopee","good"],["EPP 0%","good"],["Coins only","warn"]],
+    flags:["shopee","qualifies","freeforlife"],
+    calc:s=>Math.min(s*0.05,9999)*12*0.4 + Math.min(s*0.02,9999)*12*0.6, // blended campaign/normal
+    link:"https://ringgitplus.com/en/credit-card/Maybank-Shopee-Visa-Platinum.html",
+    req:["Min income RM24,000/year (RM2,000/month)","Age 21–65 principal, 18+ supplementary","Malaysians & expatriates","NRIC, 3 months payslip, 6 months bank statement"],
+    ben:["5x Shopee Coins/RM1 on Shopee on Special Days (Pay Day 28th, CNY, Raya, 9.9, 11.11, 12.12)","2x coins on Shopee on normal days","4x coins on dining/entertainment/contactless on Special Days","Welcome gift 5,000 coins after RM300 in 60 days","5,000 coins = RM50; supports Apple/Samsung/Google Pay","Free for life (RM25 SST/year)"],
+    epps:["Shopee buys over RM500 use Maybank 0% EzyPay","EzyPay PLUS fallback: 9% p.a., up to 24 months","Widest 0% EzyPay partner network for a MacBook"],
+    watch:["5x rate only on Special Days; normal days are ~2%","Shopee Coins usable only on Shopee","No TreatsPoints on this card"]
+  },
+  {
+    id:"gold", rank:2, name:"Maybank 2 Gold Cards",
+    reward:"<b>5x TreatsPoints</b> on all retail + 5% weekend cashback",
+    income:"RM2,500/mo", fee:"Free for life", epp:"Yes",
+    qualifies:true,
+    tags:[["Any merchant","good"],["Flexible points","good"],["AMEX limits","warn"]],
+    flags:["online","qualifies","freeforlife"],
+    calc:s=>s*12*0.05*0.5 + s*12*0.01, // points value approx
+    link:"https://ringgitplus.com/en/credit-card/Maybank-2-Gold-Cards.html",
+    req:["Min income RM30,000/year (RM2,500/month)","Age 21+ principal","NRIC, 3 months payslip, 6 months bank statement"],
+    ben:["Two cards from one application: AMEX + Visa/Mastercard","5x TreatsPoints on all retail (AMEX), any merchant","5% cashback on weekend spend","Points redeemable for vouchers or air miles","Free for life"],
+    epps:["Full Maybank EzyPay & EzyPay PLUS access"],
+    watch:["Earns less than Shopee card on Shopee itself","AMEX not accepted everywhere; Visa covers gaps"]
+  },
+  {
+    id:"myimpact", rank:3, name:"Maybank myimpact Visa Signature",
+    reward:"<b>Up to 8%</b> cashback on ESG spend (capped RM35/mo)",
+    income:"RM3,000/mo", fee:"Free for life", epp:"Yes",
+    qualifies:true,
+    tags:[["Real cashback","good"],["Free for life","good"],["RM35 cap","warn"]],
+    flags:["cashback","qualifies","freeforlife"],
+    calc:s=>Math.min(s*0.08,35)*12 + s*0.005*12,
+    link:"https://ringgitplus.com/en/credit-card/Maybank-myimpact-Visa-Signature-Credit-Card.html",
+    req:["Min income RM36,000/year (RM3,000/month)","Age 21+ principal"],
+    ben:["Up to 8% cashback on ESG spend, year-round","Capped at RM35/month","0.5% cashback on contactless","Free for life"],
+    epps:["Full Maybank EzyPay / EzyPay PLUS access"],
+    watch:["RM35/month cap = max RM420/year","No TreatsPoints from 1 Jan 2026","ESG categories may not match her spend"]
+  },
+  {
+    id:"affin", rank:4, name:"AFFIN DUO Visa",
+    reward:"<b>3% flat</b> cashback on all online spend, any merchant",
+    income:"RM1,500/mo", fee:"Free for life", epp:"Yes",
+    qualifies:true,
+    tags:[["Any online merchant","good"],["Lowest income bar","good"],["Real cashback","good"]],
+    flags:["online","cashback","qualifies","freeforlife"],
+    calc:s=>s*0.03*12,
+    link:"https://ringgitplus.com/en/credit-card/",
+    req:["Min income RM18,000/year (RM1,500/month) — lowest bar","Age 21+ principal"],
+    ben:["3% flat cashback on all online spend, any merchant","Real cashback, not coins","Free for life","Pairs well with CIMB Cash Rebate Platinum"],
+    epps:["Installment plans available — verify 0% partner coverage"],
+    watch:["Flat 3% lower than Shopee 5x on campaign days","Confirm 0% EPP partners before relying on it for a MacBook"]
+  },
+  {
+    id:"cimb", rank:5, name:"CIMB Cash Rebate Platinum",
+    reward:"<b>5%</b> cashback on key categories + brand-neutral petrol",
+    income:"RM2,000/mo", fee:"Free for life", epp:"Yes",
+    qualifies:true,
+    tags:[["Everyday card","good"],["Real cashback","good"],["Not online-first","warn"]],
+    flags:["cashback","qualifies","freeforlife"],
+    calc:s=>s*0.02*12, // online not its strength
+    link:"https://ringgitplus.com/en/credit-card/",
+    req:["Min income RM24,000/year (RM2,000/month)","Age 21+ principal"],
+    ben:["5% cashback on key categories","Brand-neutral 5% petrol rebate (any station)","Free for life","Strong main everyday card"],
+    epps:["Installment plans available"],
+    watch:["Online shopping not its main strength","Best paired with an online-focused card"]
+  },
+  {
+    id:"sc", rank:6, name:"StanChart JustOne Platinum",
+    reward:"<b>Up to 15%</b> cashback on online/petrol/auto-bill (capped RM85)",
+    income:"RM3,000/mo", fee:"RM250 (1st yr free)", epp:"Yes",
+    qualifies:true,
+    tags:[["High rate","good"],["Needs high spend","warn"],["Annual fee","warn"]],
+    flags:["online","cashback","qualifies"],
+    calc:s=>Math.min(s*0.15,85)*12,
+    link:"https://www.malaymail.com/news/money/2019/04/08/what-is-the-best-cashback-credit-card-for-online-shopping/1740905",
+    req:["Min income RM36,000/year (RM3,000/month)","Age 21+ principal"],
+    ben:["Up to 15% cashback on petrol, online, auto-bill","Capped up to RM85/month","Annual fee RM250 (1st year free), waived with RM20,000 spend"],
+    epps:["Installment plans available"],
+    watch:["Top tier needs high monthly spend","Annual fee applies if spend target missed","Figures from an older source — verify current terms"]
+  },
+  {
+    id:"aeon", rank:7, name:"AEON Visa",
+    reward:"<b>2%</b> cashback on online & overseas (capped RM15/mo)",
+    income:"RM3,000/mo", fee:"RM95 (1st yr free)", epp:"Yes",
+    qualifies:true,
+    tags:[["Light spenders","good"],["RM15 cap","warn"],["Low ceiling","warn"]],
+    flags:["online","cashback","qualifies"],
+    calc:s=>Math.min(s*0.02,15)*12,
+    link:"https://ringgitplus.com/en/credit-card/online-shopping/",
+    req:["Min income RM36,000/year (RM3,000/month)","Age 21+ principal"],
+    ben:["2% cashback on online & overseas (capped RM15/month)","Cashback on Sunday petrol & AEON BiG Member Day (28th)","Annual fee RM95 (1st year free), waived with 12 swipes/year"],
+    epps:["Installment plans available"],
+    watch:["RM15/month cap is the lowest here","Weakest for a regular online shopper"]
+  }
+];
+
+// ---- render cards ----
+const grid = document.getElementById('cardGrid');
+cards.forEach(c=>{
+  const el = document.createElement('article');
+  el.className = 'ccard' + (c.top?' top-pick':'');
+  el.dataset.flags = c.flags.join(' ');
+  el.innerHTML = `
+    ${c.top?'<div class="best-ribbon">★ Best match for her</div>':''}
+    <div class="ccard-top">
+      <h4>${c.name}</h4>
+      <span class="rank">${c.rank}</span>
+    </div>
+    <div class="ccard-body">
+      <div class="reward-line">${c.reward}</div>
+      <div class="specs">
+        <div class="spec"><span class="k">Min income</span><span class="v">${c.income}</span></div>
+        <div class="spec"><span class="k">Annual fee</span><span class="v">${c.fee}</span></div>
+        <div class="spec"><span class="k">0% EPP</span><span class="v">${c.epp}</span></div>
+      </div>
+      <div class="tags">${c.tags.map(t=>`<span class="tg ${t[1]}">${t[0]}</span>`).join('')}</div>
+      <button class="expand" aria-expanded="false">Full details <span class="arw">▾</span></button>
+      <div class="detail">
+        <div class="detail-inner">
+          <h5>Requirements</h5><ul>${c.req.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <h5>Benefits</h5><ul>${c.ben.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <h5>EPP / Instalments</h5><ul>${c.epps.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <h5>Watch out for</h5><ul>${c.watch.map(x=>`<li class="warn">${x}</li>`).join('')}</ul>
+          <a class="applylink" href="${c.link}" target="_blank" rel="noopener">View card &amp; apply ↗</a>
+        </div>
+      </div>
+    </div>`;
+  grid.appendChild(el);
+});
+
+// ---- expand/collapse ----
+grid.addEventListener('click', e=>{
+  const btn = e.target.closest('.expand');
+  if(!btn) return;
+  const detail = btn.nextElementSibling;
+  const open = btn.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open);
+  detail.style.maxHeight = open ? detail.scrollHeight + 'px' : '0';
+  btn.firstChild.textContent = open ? 'Hide details ' : 'Full details ';
+});
+
+// ---- filters ----
+const filterBtns = document.querySelectorAll('.pill');
+filterBtns.forEach(b=>b.addEventListener('click',()=>{
+  filterBtns.forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const f = b.dataset.filter;
+  document.querySelectorAll('.ccard').forEach(card=>{
+    const show = f==='all' || card.dataset.flags.includes(f);
+    card.classList.toggle('dim', !show);
+  });
+}));
+
+// ---- calculator ----
+const spend = document.getElementById('spend');
+const spendOut = document.getElementById('spendOut');
+const estGrid = document.getElementById('estGrid');
+
+function fmt(n){return 'RM'+Math.round(n).toLocaleString()}
+function renderEst(){
+  const s = +spend.value;
+  spendOut.textContent = 'RM'+s.toLocaleString();
+  const rows = cards.map(c=>({name:c.name, val:c.calc(s)})).sort((a,b)=>b.val-a.val);
+  const max = rows[0].val;
+  estGrid.innerHTML = rows.map((r,i)=>`
+    <div class="est ${i===0?'win':''}">
+      <div class="name">${r.name}${i===0?' <span class="badge">TOP</span>':''}</div>
+      <div class="amt">${fmt(r.val)}<small> /yr</small></div>
+    </div>`).join('');
+}
+spend.addEventListener('input', renderEst);
+renderEst();
+</script>
+</body>
+</html>
